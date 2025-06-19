@@ -1,88 +1,103 @@
+Here's a rewritten version of the second document, formatted and refined to exactly match the style and clarity of the first polished version:
 
-#Finite-State Machine + Datapath
+---
+
+# Finite-State Machine + Datapath
 
 ## Objective
-The objective of this lab is to use a finite-state machine integrated with a datapath to calculate the number of asserted bits in a given input using several different SystemVerilog models.
+
+The objective of this lab is to implement a finite-state machine integrated with a datapath to count the number of asserted bits in an input word. This is accomplished using multiple SystemVerilog architectural styles.
 
 ## Tools Used
-- Questa
-- Vivado
 
+* Questa
+* Vivado
 
 ## Pseudocode
-Study the following pseudocode to make sure you understand the basic algorithm for efficiently calculating the number of asserted bits in a given input.
+
+Below is the high-level pseudocode for the core algorithm used to count the number of `1`s (asserted bits) in a given input. Understanding this logic is key before proceeding with implementation.
 
 ```c
-// inputs: go, in (INPUT_WIDTH bits)
-// outputs: out (clog2(INPUT_WIDTH+1) bits), done
+// Inputs: go, in (INPUT_WIDTH bits)
+// Outputs: out (clog2(INPUT_WIDTH+1) bits), done
 
-// reset values (add any others that you might need)
+// Reset values (add any others if needed)
 out = 0;
 done = 0;
 
-while(1) {
-    while (go == 0); // wait for go to start circuit
+while (1) {
+    while (go == 0); // Wait for go signal
     done = 0;
     count = 0;
 
-    n_r = in; // store input in register
+    n_r = in; // Store input in a register
 
-    // main algorithm
-    while(n_r != 0) {
-      n_r = n_r & (n_r – 1);
-      count ++;
+    // Main algorithm
+    while (n_r != 0) {
+        n_r = n_r & (n_r - 1);
+        count++;
     }
 
-    // assign output and assert done
+    // Output result and signal completion
     output = count;
     done = 1;
 }
 ```
 
-#### Important constraints for the `done` output signal:
-- The `done` output should remain asserted until the application is started again, which is represented by `go` being asserted while `done` is asserted.
-- The `done` output should be cleared the cycle after go is asserted.
+### Important `done` Signal Constraints
 
+* The `done` signal must remain asserted until the circuit is restarted (i.e., `go` is asserted again while `done` is still high).
+* Once restarted, `done` must be de-asserted on the following clock cycle.
+
+---
 
 ## Part 1: 1-process FSMD
-Designed a single-process FSMD that integrates control and datapath logic within one always block. The module was verified using the count_ones_tb testbench with the ARCH parameter set to "fsmd_1p". Synthesis was completed successfully in Vivado. The project includes simulation and synthesis screenshots for this architecture.
 
-![](.data/syn_example.png)
+Implemented a **single-process FSMD** where both control logic and datapath operations are handled within the same always block. This version was tested using the `count_ones_tb` testbench with the `ARCH` parameter set to `"fsmd_1p"`. The design was synthesized using Vivado and confirmed to work correctly.
 
 ### Deliverables
-- `images/part1_sim.{jpg,png}` - Simulation screenshot (showing resulting number of tests passing/failing)
-- `images/part1_syn.{jpg,png}` - Synthesis screenshot 
 
+* `images/part1_sim.{jpg,png}` – Simulation results (test pass/fail summary)
+* `images/part1_syn.{jpg,png}` – Vivado synthesis screenshot
+
+---
 
 ## Part 2: 2-process FSMD
-Refactored the design into a two-process FSMD model where control logic and datapath logic are separated into distinct always blocks. Tested using the same testbench with ARCH set to "fsmd_2p". The module was synthesized using Vivado targeting the same FPGA part. Screenshots of simulation and synthesis results are included.
+
+Refactored the design into a **two-process FSMD** model, separating the control logic and datapath operations into two distinct always blocks. Verified functionality using the same testbench with `ARCH = "fsmd_2p"`, and synthesized the design using Vivado.
 
 ### Deliverables
-- `images/part2_sim.{jpg,png}` - Simulation screenshot (showing resulting number of tests passing/failing)
-- `images/part2_syn.{jpg,png}` - Synthesis screenshot
 
+* `images/part2_sim.{jpg,png}` – Simulation results (test pass/fail summary)
+* `images/part2_syn.{jpg,png}` – Vivado synthesis screenshot
+
+---
 
 ## Part 3: FSM + Datapath
 
 ### Datapath
-Designed a dedicated datapath to implement the count_ones algorithm and created a corresponding finite state machine to control it. The datapath was implemented in count_ones_datapath.sv, and the FSM was implemented in count_ones_fsm.sv using a two-process model. These were structurally connected in count_ones_fsm_plus_d.sv. The module was tested with the testbench using ARCH set to "fsm_plus_d". The datapath design schematic, simulation results, and synthesis screenshots are all included in the project.
+
+Implemented a standalone **datapath module** to carry out the `count_ones` operation. This was implemented in `count_ones_datapath.sv`.
 
 ### FSM
-Created a __2-process__ finite-state machine in the provided [count_ones_fsm](src/count_ones_fsm.sv) file that utilizes my custom datapath to implement the algorithm.
 
-### FSM+D
-Connected my FSM and datapath together structurally in the [count_ones_fsm_plus_d](src/count_ones_fsm_plus_d) file.
+Designed a **2-process FSM** to control the datapath, implemented in `count_ones_fsm.sv`. The FSM generates control signals for the datapath based on the current state and input signals.
 
-Created a easily interchangable arch parameter to make the debugging easier.
-When running the testbench and synthesis, make sure to change the `ARCH` parameter to `"fsm_plus_d"`.
+### FSM + Datapath Integration
 
+Integrated both modules structurally in `count_ones_fsm_plus_d.sv`. This modular structure makes the design clean and scalable. Testing was performed using the same testbench with `ARCH = "fsm_plus_d"`.
+
+> An easily interchangeable `ARCH` parameter is used for simulation and synthesis to switch between different design implementations for efficient debugging.
 
 ### Deliverables
-- `images/part3_datapath.{jpg,png,pdf}` - Datapath schematic
-- `images/part3_sim.{jpg,png}` - Simulation screenshot (showing resulting number of tests passing/failing)
-- `images/part3_syn.{jpg,png}` - Synthesis screenshot 
 
-#Repository Structure
+* `images/part3_datapath.{jpg,png,pdf}` – Datapath block diagram/schematic
+* `images/part3_sim.{jpg,png}` – Simulation results (test pass/fail summary)
+* `images/part3_syn.{jpg,png}` – Vivado synthesis screenshot
+
+---
+
+## Repository Structure
 
 ```bash
 ├── images
@@ -105,4 +120,6 @@ When running the testbench and synthesis, make sure to change the `ARCH` paramet
 ├── README.md
 └── sources.txt
 ```
+
+---
 
